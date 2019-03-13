@@ -1,25 +1,28 @@
-﻿using UniRx;
+using System;
+using DevToolKit.Utilities;
+using UniRx;
 using UnityEngine;
-using _Scripts.RxDevKit.Utilities;
 
-namespace _Scripts.RxDevKit.FadeManager
+namespace DevToolKit.FadeManager
 {
     public static class FadeManager
     {
-        public static void EnableCanvasGroup(this CanvasGroup c, bool setoOne)
+        public static void EnableCanvasGroup(this CanvasGroup c, bool setoOne, bool interactable = true, bool blocksRaycasts = true)
         {
             c.gameObject.SetActive(true);
-            c.interactable = true;
-            c.blocksRaycasts = true;
-            if (setoOne) c.alpha = 1f;
+            c.interactable = interactable;
+            c.blocksRaycasts = blocksRaycasts;
+//            if (setoOne) c.alpha = 1f;
+            c.alpha = setoOne? 1f : 0f;
         }
 
-        public static void DisableCanvasGroup(this CanvasGroup c, bool setoZero)
+        public static void DisableCanvasGroup(this CanvasGroup c, bool setoZero, bool objActive = false, bool interactable = false, bool blocksRaycasts = false)
         {
-            c.gameObject.SetActive(false);
-            c.interactable = false;
-            c.blocksRaycasts = false;
-            if (setoZero) c.alpha = 0f;
+            c.gameObject.SetActive(objActive);
+            c.interactable = interactable;
+            c.blocksRaycasts = blocksRaycasts;
+            //if (setoZero) c.alpha = 0f;
+            c.alpha = setoZero? 0f : 1f;
         }
 
         public static IObservable<float> FadeIn(this CanvasGroup c, float duration, bool interactable = true, bool keepOn = true)
@@ -30,7 +33,7 @@ namespace _Scripts.RxDevKit.FadeManager
             var o = Observable.EveryUpdate()
                 .Select(_ => timer += Time.deltaTime)
                 .TakeWhile(x => x < duration)
-                .Select(x => x.FromTo(0, duration, 0, 1))
+                .Select(x => x.MapValue(0, duration, 0, 1))
                 .Do(x => c.alpha = x)
                 .DoOnCompleted(() =>
                 {
@@ -50,7 +53,7 @@ namespace _Scripts.RxDevKit.FadeManager
             var o = Observable.EveryUpdate()
                 .Select(_ => timer += Time.deltaTime)
                 .TakeWhile(x => x < duration)
-                .Select(x => x.FromTo(0, duration, 1, 0))
+                .Select(x => x.MapValue(0, duration, 1, 0))
                 .Do(x => c.alpha = x)
                 .DoOnCompleted(() =>
                 {
@@ -74,7 +77,7 @@ namespace _Scripts.RxDevKit.FadeManager
             var o = Observable.EveryUpdate()
                 .Select(_ => timer += Time.deltaTime)
                 .TakeWhile(x => x < duration)
-                .Select(x => x.FromTo(0, duration, 1, 0));
+                .Select(x => x.MapValue(0, duration, 1, 0));
             return o;
         }
     }
